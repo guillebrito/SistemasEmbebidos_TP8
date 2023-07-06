@@ -129,6 +129,59 @@ void DecrementarHora(uint8_t * entrada)
         HORAS_UNI--;
     }
 }
+
+void SecondsIncrement(uint8_t * entrada)
+{
+    SEGUNDOS_UNI++;
+
+    if (SEGUNDOS_UNI > 9)
+    {
+        SEGUNDOS_UNI = 0;
+        SEGUNDOS_DEC++;
+    }
+
+    if (SEGUNDOS_DEC > 5)
+    {
+        SEGUNDOS_DEC = 0;
+        MINUTOS_UNI++;
+    }
+
+    if (MINUTOS_UNI > 9)
+    {
+        MINUTOS_UNI = 0;
+        MINUTOS_DEC++;
+    }
+
+    if (MINUTOS_DEC > 5)
+    {
+        MINUTOS_DEC = 0;
+        HORAS_UNI++;
+    }
+
+    if (HORAS_UNI > 9)
+    {
+        HORAS_UNI = 0;
+        HORAS_DEC++;
+    }
+
+    if (HORAS_DEC > 1 && HORAS_UNI > 3)
+    {
+        HORAS_DEC = 0;
+        HORAS_UNI = 0;
+    }
+}
+
+bool HoraValida(const uint8_t * entrada)
+{
+    bool valida = true;
+
+    if (SEGUNDOS_UNI > 9 || SEGUNDOS_DEC > 5 || MINUTOS_UNI > 9 || MINUTOS_DEC > 5 || HORAS_UNI > 9 || HORAS_DEC > 2 ||
+        (HORAS_UNI > 3 && HORAS_DEC > 1))
+    {
+        valida = false;
+    }
+    return valida;
+}
 /* === End of documentation ==================================================================== */
 
 /** @} End of module definition for doxygen */

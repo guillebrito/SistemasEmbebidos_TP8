@@ -31,6 +31,7 @@ SPDX-License-Identifier: MIT
 /* === Headers files inclusions ================================================================ */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /* === Cabecera C++ ============================================================================ */
 
@@ -74,6 +75,10 @@ extern "C"
      * @param entrada Puntero al vector a trabajar.
      */
     void DecrementarHora(uint8_t * entrada);
+
+    void SecondsIncrement(uint8_t * entrada);
+
+    bool HoraValida(const uint8_t * hora);
 
     /* === End of documentation ==================================================================== */
 

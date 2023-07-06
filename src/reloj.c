@@ -21,17 +21,11 @@ SPDX-License-Identifier: MIT
 /* === Headers files inclusions =============================================================== */
 
 #include "reloj.h"
+#include "controlbcd.h"
 #include <stddef.h>
 #include <string.h>
 
 /* === Macros definitions ====================================================================== */
-
-#define SEGUNDOS_UNI  hora[5]
-#define SEGUNDOS_DEC  hora[4]
-#define MINUTOS_UNI   hora[3]
-#define MINUTOS_DEC   hora[2]
-#define HORAS_UNI     hora[1]
-#define HORAS_DEC     hora[0]
 
 #define Compara(a, b) memcmp(reloj->a, reloj->b, sizeof(reloj->a)) == 0
 
@@ -57,58 +51,13 @@ struct clock_s
 
 /* === Private function declarations =========================================================== */
 
-void SecondsIncrement(uint8_t * hora);
-
 void AlarmCheck(clock_t reloj);
-
-bool HoraValida(const uint8_t * hora);
 
 /* === Public variable definitions ============================================================= */
 
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
-
-void SecondsIncrement(uint8_t * hora)
-{
-    SEGUNDOS_UNI++;
-
-    if (SEGUNDOS_UNI > 9)
-    {
-        SEGUNDOS_UNI = 0;
-        SEGUNDOS_DEC++;
-    }
-
-    if (SEGUNDOS_DEC > 5)
-    {
-        SEGUNDOS_DEC = 0;
-        MINUTOS_UNI++;
-    }
-
-    if (MINUTOS_UNI > 9)
-    {
-        MINUTOS_UNI = 0;
-        MINUTOS_DEC++;
-    }
-
-    if (MINUTOS_DEC > 5)
-    {
-        MINUTOS_DEC = 0;
-        HORAS_UNI++;
-    }
-
-    if (HORAS_UNI > 9)
-    {
-        HORAS_UNI = 0;
-        HORAS_DEC++;
-    }
-
-    if (HORAS_DEC > 1 && HORAS_UNI > 3)
-    {
-        HORAS_DEC = 0;
-        HORAS_UNI = 0;
-    }
-}
 
 void AlarmCheck(clock_t reloj)
 {
@@ -124,18 +73,6 @@ void AlarmCheck(clock_t reloj)
         reloj->ActivarAlarma(true);
         reloj->alarma_pospuesta = false;
     }
-}
-
-bool HoraValida(const uint8_t * hora)
-{
-    bool valida = true;
-
-    if (SEGUNDOS_UNI > 9 || SEGUNDOS_DEC > 5 || MINUTOS_UNI > 9 || MINUTOS_DEC > 5 || HORAS_UNI > 9 || HORAS_DEC > 2 ||
-        (HORAS_UNI > 3 && HORAS_DEC > 1))
-    {
-        valida = false;
-    }
-    return valida;
 }
 
 /* === Public function implementation ========================================================== */
