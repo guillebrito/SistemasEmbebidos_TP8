@@ -80,6 +80,12 @@ extern "C"
      */
     board_t BoardCreate(void);
 
+    /**
+     * @brief Función para inicializar el SysTick
+     *
+     * @param ticks Cantidad de ticks por segundo
+     */
+    void SysTick_Init(int ticks);
     /* === End of documentation ==================================================================== */
 
 #ifdef __cplusplus

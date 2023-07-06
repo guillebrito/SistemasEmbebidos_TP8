@@ -77,6 +77,8 @@ int main(void)
     board = BoardCreate();
     reloj = ClockCreate(10, ActivarAlarma);
 
+    SysTick_Init(1000);
+
     while (true)
     {
         DisplayToggleDot(board->display, 1);

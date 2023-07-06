@@ -52,7 +52,6 @@ void ScreenTurnOff(void);
 void SegmentsTurnOn(uint8_t segments);
 void DigitTurnOn(uint8_t digit);
 
-void SysTick_Init(int ticks);
 void DigistInit(void);
 void SegmentsInit(void);
 void BuzzerInit(void);
@@ -182,8 +181,6 @@ void KeysInit(void)
 
 board_t BoardCreate(void)
 {
-    SysTick_Init(1000);
-
     static const struct display_driver_s driver = {
         .ScreenTurnOff = ScreenTurnOff,
         .SegmentsTurnOn = SegmentsTurnOn,
