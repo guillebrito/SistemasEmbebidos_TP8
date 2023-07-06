@@ -46,7 +46,8 @@
 #include <stddef.h>
 
 /* === Macros definitions ====================================================================== */
-
+#define ParpadearDigitos(from, to, frec) DisplayFlashDigits(board->display, from, to, frec)
+#define AlternarPunto(punto)             DisplayToggleDot(board->display, punto)
 /* === Private data type declarations ========================================================== */
 
 typedef enum
@@ -54,7 +55,7 @@ typedef enum
     SIN_CONFIGURAR,
     MOSTRANDO_HORA,
     AJUSTANDO_MINUTOS_ACTUAL,
-    AJUSTANDO_HORA_ACTUAL,
+    AJUSTANDO_HORAS_ACTUAL,
     AJUSTANDO_MINUTOS_ALARMA,
     AJUSTANDO_HORAS_ALARMA,
 } modo_t;
@@ -78,30 +79,86 @@ static modo_t modo;
 void ActivarAlarma(bool estado)
 {
 }
+void CambiarModo(modo_t valor)
+{
+    modo = valor;
+    switch (modo)
+    {
+    case SIN_CONFIGURAR:
+        ParpadearDigitos(0, 3, 200);
+        break;
+    case MOSTRANDO_HORA:
+        ParpadearDigitos(0, 0, 0);
+        break;
+    case AJUSTANDO_MINUTOS_ACTUAL:
+        ParpadearDigitos(2, 3, 200);
+        break;
+    case AJUSTANDO_HORAS_ACTUAL:
+        ParpadearDigitos(0, 1, 200);
+        break;
+    case AJUSTANDO_MINUTOS_ALARMA:
+        ParpadearDigitos(2, 3, 200);
+        AlternarPunto(0);
+        AlternarPunto(1);
+        AlternarPunto(2);
+        AlternarPunto(3);
+        break;
+    case AJUSTANDO_HORAS_ALARMA:
+        ParpadearDigitos(0, 1, 200);
+        AlternarPunto(0);
+        AlternarPunto(1);
+        AlternarPunto(2);
+        AlternarPunto(3);
+        break;
+    default:
+        break;
+    }
+}
 
 /* === Public function implementation ========================================================= */
 
 int main(void)
 {
+    uint8_t entrada[6] = {0, 0, 0, 0, 0, 0};
+
     board = BoardCreate();
-    reloj = ClockCreate(10, ActivarAlarma);
-    modo = SIN_CONFIGURAR;
+    reloj = ClockCreate(1000, ActivarAlarma);
 
     SysTick_Init(1000);
-    DisplayFlashDigits(board->display, 0, 3, 200);
+    CambiarModo(SIN_CONFIGURAR);
 
     while (true)
     {
         if (DigitalInputHasActivated(board->aceptar))
         {
+            if (modo == AJUSTANDO_MINUTOS_ACTUAL)
+            {
+                CambiarModo(AJUSTANDO_HORAS_ACTUAL);
+            }
+            else if (modo == AJUSTANDO_HORAS_ACTUAL)
+            {
+                ClockSetTime(reloj, entrada, sizeof(entrada));
+                CambiarModo(MOSTRANDO_HORA);
+            }
         }
 
         if (DigitalInputHasActivated(board->cancelar))
         {
+            if (ClockGetTime(reloj, entrada, sizeof(entrada)))
+            {
+                CambiarModo(MOSTRANDO_HORA);
+            }
+            else
+            {
+                CambiarModo(SIN_CONFIGURAR);
+            }
         }
-
+        // Falta 3 seg
         if (DigitalInputHasActivated(board->ajustar_tiempo))
         {
+            CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
+            ClockGetTime(reloj, entrada, sizeof(entrada));
+            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
         }
 
         if (DigitalInputHasActivated(board->ajustar_alarma))
@@ -110,10 +167,28 @@ int main(void)
 
         if (DigitalInputHasActivated(board->decrementar))
         {
+            if (modo == AJUSTANDO_MINUTOS_ACTUAL)
+            {
+                entrada[3] = entrada[3] - 1;
+            }
+            else if (modo == AJUSTANDO_HORAS_ACTUAL)
+            {
+                entrada[1] = entrada[1] - 1;
+            }
+            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
         }
 
         if (DigitalInputHasActivated(board->incrementar))
         {
+            if (modo == AJUSTANDO_MINUTOS_ACTUAL)
+            {
+                entrada[3] = entrada[3] + 1;
+            }
+            else if (modo == AJUSTANDO_HORAS_ACTUAL)
+            {
+                entrada[1] = entrada[1] + 1;
+            }
+            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
         }
 
         for (int index = 0; index < 100; index++)
@@ -143,7 +218,10 @@ void SysTick_Handler(void)
         {
             ClockGetTime(reloj, hora, sizeof(hora));
             DisplayWriteBCD(board->display, hora, sizeof(hora));
-            DisplayToggleDot(board->display, 1);
+            if (current_value)
+            {
+                AlternarPunto(1);
+            }
         }
     }
 }
