@@ -119,6 +119,14 @@ extern "C"
      */
     void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t frec);
 
+    /**
+     * @brief Función para encender y apagar puntos
+     *
+     * @param display   Puntero al descriptor de la pantalla.
+     * @param position  Posición del punto.
+     */
+    void DisplayToggleDot(display_t display, uint8_t position);
+
     /* === End of documentation ==================================================================== */
 
 #ifdef __cplusplus

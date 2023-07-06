@@ -79,7 +79,7 @@ int main(void)
 
     while (true)
     {
-
+        DisplayToggleDot(board->display, 1);
         if (DigitalInputHasActivated(board->aceptar))
         {
             DigitalOutputActivate(board->buzzer);

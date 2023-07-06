@@ -158,6 +158,11 @@ void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t fr
     display->flashing_factor = frec;
 }
 
+void DisplayToggleDot(display_t display, uint8_t position)
+{
+    display->memory[position] ^= (1 << 7);
+}
+
 /* === End of documentation ==================================================================== */
 
 /** @} End of module definition for doxygen */
