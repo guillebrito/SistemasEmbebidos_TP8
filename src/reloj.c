@@ -153,7 +153,7 @@ clock_t ClockCreate(int tics_por_segundo, alarma_event_t ActivarAlarma)
     return self;
 }
 
-void ClockRefresh(clock_t reloj)
+bool ClockRefresh(clock_t reloj)
 {
     reloj->tics_actual++;
 
@@ -164,7 +164,12 @@ void ClockRefresh(clock_t reloj)
         AlarmCheck(reloj);
     }
 
-    return;
+    if ((reloj->tics_actual >= (reloj->tics_por_segundo / 2)))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 bool ClockSetTime(clock_t reloj, const uint8_t * hora, int size)

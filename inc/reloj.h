@@ -69,9 +69,11 @@ extern "C"
      *
      * Incrementa la hora en un segundo al llamarla una cantidad de veces igual al valor de la variable tics.
      *
-     * @param reloj Puntero al reloj.
+     * @param reloj     Puntero al reloj.
+     * @return true     Paso medio segundo.
+     * @return false    No paso medio segundo.
      */
-    void ClockRefresh(clock_t reloj);
+    bool ClockRefresh(clock_t reloj);
 
     /**
      * @brief Método para fijar la hora del reloj.
