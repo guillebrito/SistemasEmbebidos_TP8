@@ -73,6 +73,7 @@ static board_t board;
 static clock_t reloj;
 static modo_t modo;
 static bool AlarmaActivada = 0;
+static uint32_t count = 0;
 
 /* === Private variable definitions ============================================================ */
 
@@ -98,19 +99,19 @@ void CambiarModo(modo_t valor)
     switch (modo)
     {
     case SIN_CONFIGURAR:
-        ParpadearDigitos(0, 3, 100);
+        ParpadearDigitos(0, 3, 150);
         break;
     case MOSTRANDO_HORA:
         ParpadearDigitos(0, 0, 0);
         break;
     case AJUSTANDO_MINUTOS_ACTUAL:
-        ParpadearDigitos(2, 3, 100);
+        ParpadearDigitos(2, 3, 150);
         break;
     case AJUSTANDO_HORAS_ACTUAL:
-        ParpadearDigitos(0, 1, 100);
+        ParpadearDigitos(0, 1, 150);
         break;
     case AJUSTANDO_MINUTOS_ALARMA:
-        ParpadearDigitos(2, 3, 100);
+        ParpadearDigitos(2, 3, 150);
         AlternarPunto(0);
         AlternarPunto(1);
         AlternarPunto(2);
@@ -135,7 +136,7 @@ int main(void)
     uint8_t entrada[6] = {0, 0, 0, 0, 0, 0};
 
     board = BoardCreate();
-    reloj = ClockCreate(250, ActivarAlarma);
+    reloj = ClockCreate(1000, ActivarAlarma);
 
     SysTick_Init(1000);
     CambiarModo(SIN_CONFIGURAR);
@@ -202,22 +203,30 @@ int main(void)
             }
         }
         // Falta 3 seg
-        if (DigitalInputHasActivated(board->ajustar_tiempo))
+        if (DigitalInputGetState(board->ajustar_tiempo))
         {
-            CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
-            ClockGetTime(reloj, entrada, sizeof(entrada));
-            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+            if ((count > 3000) && (modo <= MOSTRANDO_HORA))
+            {
+                CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
+                ClockGetTime(reloj, entrada, sizeof(entrada));
+                DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+                count = 0;
+            }
         }
 
-        if (DigitalInputHasActivated(board->ajustar_alarma))
+        if (DigitalInputGetState(board->ajustar_alarma))
         {
-            CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
-            AlarmGetTime(reloj, entrada, sizeof(entrada));
-            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
-            AlternarPunto(0);
-            AlternarPunto(1);
-            AlternarPunto(2);
-            AlternarPunto(3);
+            if ((count > 3000) && (modo <= MOSTRANDO_HORA))
+            {
+                CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
+                AlarmGetTime(reloj, entrada, sizeof(entrada));
+                DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+                AlternarPunto(0);
+                AlternarPunto(1);
+                AlternarPunto(2);
+                AlternarPunto(3);
+                count = 0;
+            }
         }
 
         if (DigitalInputHasActivated(board->decrementar))
@@ -282,36 +291,39 @@ int main(void)
 
 void SysTick_Handler(void)
 {
-    static bool last_value = false;
     bool current_value;
     uint8_t hora[6];
 
     DisplayRefresh(board->display);
     current_value = ClockRefresh(reloj);
 
-    if (current_value != last_value)
+    if (modo <= MOSTRANDO_HORA)
     {
-        last_value = current_value;
+        ClockGetTime(reloj, hora, sizeof(hora));
+        DisplayWriteBCD(board->display, hora, sizeof(hora));
 
-        if (modo <= MOSTRANDO_HORA)
+        if (DigitalInputGetState(board->ajustar_tiempo) || DigitalInputGetState(board->ajustar_alarma))
         {
-            ClockGetTime(reloj, hora, sizeof(hora));
-            DisplayWriteBCD(board->display, hora, sizeof(hora));
+            count++;
+        }
+        else
+        {
+            count = 0;
+        }
 
-            if (current_value)
-            {
-                AlternarPunto(1);
-            }
+        if (current_value)
+        {
+            AlternarPunto(1);
+        }
 
-            if (AlarmGetState(reloj)) // Alarma habilitada
-            {
-                AlternarPunto(3);
-            }
+        if (AlarmGetState(reloj)) // Alarma habilitada
+        {
+            AlternarPunto(3);
+        }
 
-            if (AlarmaActivada)
-            {
-                AlternarPunto(0);
-            }
+        if (AlarmaActivada)
+        {
+            AlternarPunto(0);
         }
     }
 }
