@@ -21,6 +21,9 @@
         ".coverage": true
     },
     "files.associations": {
-        "chip.h": "c"
+        "chip.h": "c",
+        "pantalla.h": "c",
+        "poncho.h": "c",
+        "bspreloj.h": "c"
     }
 }

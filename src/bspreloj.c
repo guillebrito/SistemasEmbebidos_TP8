@@ -52,6 +52,7 @@ void ScreenTurnOff(void);
 void SegmentsTurnOn(uint8_t segments);
 void DigitTurnOn(uint8_t digit);
 
+void SysTick_Init(int ticks);
 void DigistInit(void);
 void SegmentsInit(void);
 void BuzzerInit(void);
@@ -181,6 +182,7 @@ void KeysInit(void)
 
 board_t BoardCreate(void)
 {
+
     static const struct display_driver_s driver = {
         .ScreenTurnOff = ScreenTurnOff,
         .SegmentsTurnOn = SegmentsTurnOn,
@@ -195,6 +197,20 @@ board_t BoardCreate(void)
     board.display = DisplayCreate(DIGITOS, &driver);
 
     return &board;
+}
+
+void SysTick_Init(int ticks)
+{
+    __asm volatile("cpsid i");
+
+    /* Activa Systick */
+    SystemCoreClockUpdate();
+    SysTick_Config(SystemCoreClock / ticks);
+
+    /* Actualiza la prioridad puesta por el SysTick_Config */
+    // NVIC_SetPriority(SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
+
+    __asm volatile("cpsie i");
 }
 
 /* === End of documentation ==================================================================== */

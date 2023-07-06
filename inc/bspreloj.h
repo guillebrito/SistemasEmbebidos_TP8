@@ -65,7 +65,7 @@ extern "C"
         digital_output_t buzzer; //!< Puntero al descriptor de la salida led_r.
 
         display_t display; //!< Puntero al descriptor de la pantalla.
-    } const * const board_t;
+    } const * board_t;
 
     /* === Public variable declarations ============================================================ */
 
