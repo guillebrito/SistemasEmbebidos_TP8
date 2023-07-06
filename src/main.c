@@ -42,6 +42,7 @@
 
 #include "bspreloj.h"
 #include "reloj.h"
+#include "controlbcd.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -85,26 +86,26 @@ void CambiarModo(modo_t valor)
     switch (modo)
     {
     case SIN_CONFIGURAR:
-        ParpadearDigitos(0, 3, 200);
+        ParpadearDigitos(0, 3, 100);
         break;
     case MOSTRANDO_HORA:
         ParpadearDigitos(0, 0, 0);
         break;
     case AJUSTANDO_MINUTOS_ACTUAL:
-        ParpadearDigitos(2, 3, 200);
+        ParpadearDigitos(2, 3, 100);
         break;
     case AJUSTANDO_HORAS_ACTUAL:
-        ParpadearDigitos(0, 1, 200);
+        ParpadearDigitos(0, 1, 100);
         break;
     case AJUSTANDO_MINUTOS_ALARMA:
-        ParpadearDigitos(2, 3, 200);
+        ParpadearDigitos(2, 3, 100);
         AlternarPunto(0);
         AlternarPunto(1);
         AlternarPunto(2);
         AlternarPunto(3);
         break;
     case AJUSTANDO_HORAS_ALARMA:
-        ParpadearDigitos(0, 1, 200);
+        ParpadearDigitos(0, 1, 100);
         AlternarPunto(0);
         AlternarPunto(1);
         AlternarPunto(2);
@@ -169,11 +170,11 @@ int main(void)
         {
             if (modo == AJUSTANDO_MINUTOS_ACTUAL)
             {
-                entrada[3] = entrada[3] - 1;
+                DecrementarMinuto(entrada);
             }
             else if (modo == AJUSTANDO_HORAS_ACTUAL)
             {
-                entrada[1] = entrada[1] - 1;
+                DecrementarHora(entrada);
             }
             DisplayWriteBCD(board->display, entrada, sizeof(entrada));
         }
@@ -182,16 +183,16 @@ int main(void)
         {
             if (modo == AJUSTANDO_MINUTOS_ACTUAL)
             {
-                entrada[3] = entrada[3] + 1;
+                IncrementarMinuto(entrada);
             }
             else if (modo == AJUSTANDO_HORAS_ACTUAL)
             {
-                entrada[1] = entrada[1] + 1;
+                IncrementarHora(entrada);
             }
             DisplayWriteBCD(board->display, entrada, sizeof(entrada));
         }
 
-        for (int index = 0; index < 100; index++)
+        for (int index = 0; index < 1000; index++)
         {
             for (int delay = 0; delay < 250; delay++)
             {
