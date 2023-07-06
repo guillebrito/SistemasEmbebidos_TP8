@@ -1,8 +1,7 @@
-# Trabajo Práctico Número 6
+# Trabajo Práctico Número 8
 
 -----
-
-Gestión de poncho con display de 7 segmentos 
+Reloj despertador
 
 **Table of Contents**
 
@@ -28,7 +27,7 @@ git submodule update
 5. Cargar los archivos en la placa con el comando `make download`.
 
 - Con el comando `make clean` se elimina la carpeta build.
-- Con el comando `make docs` se genera la documentación.
+
 
 
 ## License

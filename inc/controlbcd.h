@@ -76,8 +76,20 @@ extern "C"
      */
     void DecrementarHora(uint8_t * entrada);
 
+    /**
+     * @brief Incrementalos segundos de una hora.
+     *
+     * @param entrada Puntero al vector a trabajar.
+     */
     void SecondsIncrement(uint8_t * entrada);
 
+    /**
+     * @brief Verifica la velidez de una hora ingresada.
+     *
+     * @param hora      Puntero al vector a verificar.
+     * @return true     Hora valida.
+     * @return false    Hora invalida.
+     */
     bool HoraValida(const uint8_t * hora);
 
     /* === End of documentation ==================================================================== */

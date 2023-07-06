@@ -73,7 +73,9 @@ static board_t board;
 static clock_t reloj;
 static modo_t modo;
 static bool AlarmaActivada = 0;
-static uint32_t count = 0;
+static uint32_t count3s = 0;
+static uint32_t count30s = 0;
+static uint8_t entrada[6] = {0, 0, 0, 0, 0, 0};
 
 /* === Private variable definitions ============================================================ */
 
@@ -99,19 +101,19 @@ void CambiarModo(modo_t valor)
     switch (modo)
     {
     case SIN_CONFIGURAR:
-        ParpadearDigitos(0, 3, 150);
+        ParpadearDigitos(0, 3, 200);
         break;
     case MOSTRANDO_HORA:
         ParpadearDigitos(0, 0, 0);
         break;
     case AJUSTANDO_MINUTOS_ACTUAL:
-        ParpadearDigitos(2, 3, 150);
+        ParpadearDigitos(2, 3, 200);
         break;
     case AJUSTANDO_HORAS_ACTUAL:
-        ParpadearDigitos(0, 1, 150);
+        ParpadearDigitos(0, 1, 200);
         break;
     case AJUSTANDO_MINUTOS_ALARMA:
-        ParpadearDigitos(2, 3, 150);
+        ParpadearDigitos(2, 3, 200);
         AlternarPunto(0);
         AlternarPunto(1);
         AlternarPunto(2);
@@ -133,10 +135,8 @@ void CambiarModo(modo_t valor)
 
 int main(void)
 {
-    uint8_t entrada[6] = {0, 0, 0, 0, 0, 0};
-
     board = BoardCreate();
-    reloj = ClockCreate(1000, ActivarAlarma);
+    reloj = ClockCreate(10, ActivarAlarma);
 
     SysTick_Init(1000);
     CambiarModo(SIN_CONFIGURAR);
@@ -145,6 +145,7 @@ int main(void)
     {
         if (DigitalInputHasActivated(board->aceptar))
         {
+            count30s = 0;
             if (modo == MOSTRANDO_HORA)
             {
                 if (AlarmaActivada)
@@ -182,6 +183,7 @@ int main(void)
 
         if (DigitalInputHasActivated(board->cancelar))
         {
+            count30s = 0;
             if (modo == MOSTRANDO_HORA)
             {
                 if (AlarmaActivada)
@@ -205,18 +207,20 @@ int main(void)
         // Falta 3 seg
         if (DigitalInputGetState(board->ajustar_tiempo))
         {
-            if ((count > 3000) && (modo <= MOSTRANDO_HORA))
+            count30s = 0;
+            if ((count3s > 3000) && (modo <= MOSTRANDO_HORA))
             {
                 CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
                 ClockGetTime(reloj, entrada, sizeof(entrada));
                 DisplayWriteBCD(board->display, entrada, sizeof(entrada));
-                count = 0;
+                count3s = 0;
             }
         }
 
         if (DigitalInputGetState(board->ajustar_alarma))
         {
-            if ((count > 3000) && (modo <= MOSTRANDO_HORA))
+            count30s = 0;
+            if ((count3s > 3000) && (modo <= MOSTRANDO_HORA))
             {
                 CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
                 AlarmGetTime(reloj, entrada, sizeof(entrada));
@@ -225,12 +229,13 @@ int main(void)
                 AlternarPunto(1);
                 AlternarPunto(2);
                 AlternarPunto(3);
-                count = 0;
+                count3s = 0;
             }
         }
 
         if (DigitalInputHasActivated(board->decrementar))
         {
+            count30s = 0;
             if ((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA))
             {
                 DecrementarMinuto(entrada);
@@ -256,6 +261,7 @@ int main(void)
 
         if (DigitalInputHasActivated(board->incrementar))
         {
+            count30s = 0;
             if ((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA))
             {
                 IncrementarMinuto(entrada);
@@ -296,20 +302,12 @@ void SysTick_Handler(void)
 
     DisplayRefresh(board->display);
     current_value = ClockRefresh(reloj);
+    count30s++;
 
     if (modo <= MOSTRANDO_HORA)
     {
         ClockGetTime(reloj, hora, sizeof(hora));
         DisplayWriteBCD(board->display, hora, sizeof(hora));
-
-        if (DigitalInputGetState(board->ajustar_tiempo) || DigitalInputGetState(board->ajustar_alarma))
-        {
-            count++;
-        }
-        else
-        {
-            count = 0;
-        }
 
         if (current_value)
         {
@@ -325,6 +323,28 @@ void SysTick_Handler(void)
         {
             AlternarPunto(0);
         }
+
+        if (DigitalInputGetState(board->ajustar_tiempo) || DigitalInputGetState(board->ajustar_alarma))
+        {
+            count3s++;
+        }
+        else
+        {
+            count3s = 0;
+        }
+    }
+
+    if ((count30s > 30000) && (modo > MOSTRANDO_HORA))
+    {
+        if (ClockGetTime(reloj, entrada, sizeof(entrada)))
+        {
+            CambiarModo(MOSTRANDO_HORA);
+        }
+        else
+        {
+            CambiarModo(SIN_CONFIGURAR);
+        }
+        count30s = 0;
     }
 }
 
