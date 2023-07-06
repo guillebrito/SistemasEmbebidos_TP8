@@ -147,9 +147,9 @@ void AlarmPostpone(clock_t reloj, uint8_t minutos)
         reloj->ActivarAlarma(false);
     }
 
-    for (int index = 0; index < (minutos * 60); index++) // Incrementa la alarma pospuesta x minutos
+    for (int index = 0; index < minutos; index++) // Incrementa la alarma pospuesta x minutos
     {
-        SecondsIncrement(reloj->alarma_nueva);
+        IncrementarMinuto(reloj->alarma_nueva);
     }
 
     return;
