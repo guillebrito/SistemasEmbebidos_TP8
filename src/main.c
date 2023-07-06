@@ -41,6 +41,7 @@
 /* === Headers files inclusions =============================================================== */
 
 #include "bspreloj.h"
+#include "reloj.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -52,19 +53,29 @@
 
 /* === Private function declarations =========================================================== */
 
+void ActivarAlarma(bool estado);
+
 /* === Public variable definitions ============================================================= */
+
 static board_t board;
+static clock_t reloj;
+
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
+
+void ActivarAlarma(bool estado)
+{
+}
 
 /* === Public function implementation ========================================================= */
 
 int main(void)
 {
-    SysTick_Init(1000);
+    uint8_t hora[6];
 
     board = BoardCreate();
+    reloj = ClockCreate(1000, ActivarAlarma);
 
     while (true)
     {
@@ -72,33 +83,27 @@ int main(void)
         if (DigitalInputHasActivated(board->aceptar))
         {
             DigitalOutputActivate(board->buzzer);
-            DisplayWriteBCD(board->display, (uint8_t[]){1, 2, 3, 4}, 4);
         }
 
         if (DigitalInputHasActivated(board->cancelar))
         {
             DigitalOutputDeactivate(board->buzzer);
-            DisplayWriteBCD(board->display, NULL, 0);
         }
 
         if (DigitalInputHasActivated(board->ajustar_tiempo))
         {
-            DisplayWriteBCD(board->display, (uint8_t[]){0, 0, 0, 1}, 4);
         }
 
         if (DigitalInputHasActivated(board->ajustar_alarma))
         {
-            DisplayWriteBCD(board->display, (uint8_t[]){0, 0, 1, 0}, 4);
         }
 
         if (DigitalInputHasActivated(board->decrementar))
         {
-            DisplayWriteBCD(board->display, (uint8_t[]){0, 1, 0, 0}, 4);
         }
 
         if (DigitalInputHasActivated(board->incrementar))
         {
-            DisplayWriteBCD(board->display, (uint8_t[]){1, 0, 0, 0}, 4);
         }
 
         for (int index = 0; index < 100; index++)
@@ -108,12 +113,18 @@ int main(void)
                 __asm("NOP");
             }
         }
+
+        ClockGetTime(reloj, hora, sizeof(hora));
+        __asm volatile("cpsid i");
+        DisplayWriteBCD(board->display, hora, sizeof(hora));
+        __asm volatile("cpsie i");
     }
 }
 
 void SysTick_Handler(void)
 {
     DisplayRefresh(board->display);
+    ClockRefresh(reloj);
 }
 
 /* === End of documentation ==================================================================== */

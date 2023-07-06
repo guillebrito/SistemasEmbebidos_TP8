@@ -182,6 +182,7 @@ void KeysInit(void)
 
 board_t BoardCreate(void)
 {
+    SysTick_Init(1000);
 
     static const struct display_driver_s driver = {
         .ScreenTurnOff = ScreenTurnOff,
