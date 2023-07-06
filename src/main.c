@@ -72,6 +72,7 @@ void ActivarAlarma(bool estado);
 static board_t board;
 static clock_t reloj;
 static modo_t modo;
+static bool AlarmaActivada = 0;
 
 /* === Private variable definitions ============================================================ */
 
@@ -79,7 +80,18 @@ static modo_t modo;
 
 void ActivarAlarma(bool estado)
 {
+    AlarmaActivada = estado;
+
+    if (estado)
+    {
+        DigitalOutputActivate(board->buzzer);
+    }
+    else
+    {
+        DigitalOutputDeactivate(board->buzzer);
+    }
 }
+
 void CambiarModo(modo_t valor)
 {
     modo = valor;
@@ -123,7 +135,7 @@ int main(void)
     uint8_t entrada[6] = {0, 0, 0, 0, 0, 0};
 
     board = BoardCreate();
-    reloj = ClockCreate(1000, ActivarAlarma);
+    reloj = ClockCreate(250, ActivarAlarma);
 
     SysTick_Init(1000);
     CambiarModo(SIN_CONFIGURAR);
@@ -132,7 +144,18 @@ int main(void)
     {
         if (DigitalInputHasActivated(board->aceptar))
         {
-            if (modo == AJUSTANDO_MINUTOS_ACTUAL)
+            if (modo == MOSTRANDO_HORA)
+            {
+                if (AlarmaActivada)
+                {
+                    AlarmPostpone(reloj, 5);
+                }
+                else
+                {
+                    AlarmEnamble(reloj, true);
+                }
+            }
+            else if (modo == AJUSTANDO_MINUTOS_ACTUAL)
             {
                 CambiarModo(AJUSTANDO_HORAS_ACTUAL);
             }
@@ -141,11 +164,35 @@ int main(void)
                 ClockSetTime(reloj, entrada, sizeof(entrada));
                 CambiarModo(MOSTRANDO_HORA);
             }
+            else if (modo == AJUSTANDO_MINUTOS_ALARMA)
+            {
+                CambiarModo(AJUSTANDO_HORAS_ALARMA);
+                AlternarPunto(0);
+                AlternarPunto(1);
+                AlternarPunto(2);
+                AlternarPunto(3);
+            }
+            else if (modo == AJUSTANDO_HORAS_ALARMA)
+            {
+                AlarmSetTime(reloj, entrada, sizeof(entrada));
+                CambiarModo(MOSTRANDO_HORA);
+            }
         }
 
         if (DigitalInputHasActivated(board->cancelar))
         {
-            if (ClockGetTime(reloj, entrada, sizeof(entrada)))
+            if (modo == MOSTRANDO_HORA)
+            {
+                if (AlarmaActivada)
+                {
+                    AlarmCancel(reloj);
+                }
+                else
+                {
+                    AlarmEnamble(reloj, false);
+                }
+            }
+            else if (ClockGetTime(reloj, entrada, sizeof(entrada)))
             {
                 CambiarModo(MOSTRANDO_HORA);
             }
@@ -164,32 +211,63 @@ int main(void)
 
         if (DigitalInputHasActivated(board->ajustar_alarma))
         {
+            CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
+            AlarmGetTime(reloj, entrada, sizeof(entrada));
+            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+            AlternarPunto(0);
+            AlternarPunto(1);
+            AlternarPunto(2);
+            AlternarPunto(3);
         }
 
         if (DigitalInputHasActivated(board->decrementar))
         {
-            if (modo == AJUSTANDO_MINUTOS_ACTUAL)
+            if ((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA))
             {
                 DecrementarMinuto(entrada);
             }
-            else if (modo == AJUSTANDO_HORAS_ACTUAL)
+            else if ((modo == AJUSTANDO_HORAS_ACTUAL) || (modo == AJUSTANDO_HORAS_ALARMA))
             {
                 DecrementarHora(entrada);
             }
-            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+
+            if ((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_HORAS_ACTUAL))
+            {
+                DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+            }
+            else if ((modo == AJUSTANDO_MINUTOS_ALARMA) || (modo == AJUSTANDO_HORAS_ALARMA))
+            {
+                DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+                AlternarPunto(0);
+                AlternarPunto(1);
+                AlternarPunto(2);
+                AlternarPunto(3);
+            }
         }
 
         if (DigitalInputHasActivated(board->incrementar))
         {
-            if (modo == AJUSTANDO_MINUTOS_ACTUAL)
+            if ((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA))
             {
                 IncrementarMinuto(entrada);
             }
-            else if (modo == AJUSTANDO_HORAS_ACTUAL)
+            else if ((modo == AJUSTANDO_HORAS_ACTUAL) || (modo == AJUSTANDO_HORAS_ALARMA))
             {
                 IncrementarHora(entrada);
             }
-            DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+
+            if ((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_HORAS_ACTUAL))
+            {
+                DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+            }
+            else if ((modo == AJUSTANDO_MINUTOS_ALARMA) || (modo == AJUSTANDO_HORAS_ALARMA))
+            {
+                DisplayWriteBCD(board->display, entrada, sizeof(entrada));
+                AlternarPunto(0);
+                AlternarPunto(1);
+                AlternarPunto(2);
+                AlternarPunto(3);
+            }
         }
 
         for (int index = 0; index < 1000; index++)
@@ -219,9 +297,20 @@ void SysTick_Handler(void)
         {
             ClockGetTime(reloj, hora, sizeof(hora));
             DisplayWriteBCD(board->display, hora, sizeof(hora));
+
             if (current_value)
             {
                 AlternarPunto(1);
+            }
+
+            if (AlarmGetState(reloj)) // Alarma habilitada
+            {
+                AlternarPunto(3);
+            }
+
+            if (AlarmaActivada)
+            {
+                AlternarPunto(0);
             }
         }
     }
