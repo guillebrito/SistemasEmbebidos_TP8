@@ -49,6 +49,16 @@
 
 /* === Private data type declarations ========================================================== */
 
+typedef enum
+{
+    SIN_CONFIGURAR,
+    MOSTRANDO_HORA,
+    AJUSTANDO_MINUTOS_ACTUAL,
+    AJUSTANDO_HORA_ACTUAL,
+    AJUSTANDO_MINUTOS_ALARMA,
+    AJUSTANDO_HORAS_ALARMA,
+} modo_t;
+
 /* === Private variable declarations =========================================================== */
 
 /* === Private function declarations =========================================================== */
@@ -59,6 +69,7 @@ void ActivarAlarma(bool estado);
 
 static board_t board;
 static clock_t reloj;
+static modo_t modo;
 
 /* === Private variable definitions ============================================================ */
 
@@ -72,25 +83,21 @@ void ActivarAlarma(bool estado)
 
 int main(void)
 {
-    uint8_t hora[6];
-
     board = BoardCreate();
-    reloj = ClockCreate(1000, ActivarAlarma);
+    reloj = ClockCreate(10, ActivarAlarma);
+    modo = SIN_CONFIGURAR;
 
     SysTick_Init(1000);
+    DisplayFlashDigits(board->display, 0, 3, 200);
 
     while (true)
     {
         if (DigitalInputHasActivated(board->aceptar))
         {
-            DigitalOutputActivate(board->buzzer);
-            DisplayFlashDigits(board->display, 0, 3, 200);
         }
 
         if (DigitalInputHasActivated(board->cancelar))
         {
-            DigitalOutputDeactivate(board->buzzer);
-            DisplayFlashDigits(board->display, 0, 0, 0);
         }
 
         if (DigitalInputHasActivated(board->ajustar_tiempo))
@@ -116,11 +123,6 @@ int main(void)
                 __asm("NOP");
             }
         }
-
-        // ClockGetTime(reloj, hora, sizeof(hora));
-        // __asm volatile("cpsid i");
-        // DisplayWriteBCD(board->display, hora, sizeof(hora));
-        // __asm volatile("cpsie i");
     }
 }
 
@@ -128,14 +130,21 @@ void SysTick_Handler(void)
 {
     static bool last_value = false;
     bool current_value;
+    uint8_t hora[6];
 
     DisplayRefresh(board->display);
     current_value = ClockRefresh(reloj);
 
     if (current_value != last_value)
     {
-        DisplayToggleDot(board->display, 1);
         last_value = current_value;
+
+        if (modo <= MOSTRANDO_HORA)
+        {
+            ClockGetTime(reloj, hora, sizeof(hora));
+            DisplayWriteBCD(board->display, hora, sizeof(hora));
+            DisplayToggleDot(board->display, 1);
+        }
     }
 }
 
