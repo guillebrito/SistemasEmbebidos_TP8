@@ -75,7 +75,7 @@ int main(void)
     uint8_t hora[6];
 
     board = BoardCreate();
-    reloj = ClockCreate(1000, ActivarAlarma);
+    reloj = ClockCreate(10, ActivarAlarma);
 
     while (true)
     {
@@ -83,11 +83,13 @@ int main(void)
         if (DigitalInputHasActivated(board->aceptar))
         {
             DigitalOutputActivate(board->buzzer);
+            DisplayFlashDigits(board->display, 0, 3, 200);
         }
 
         if (DigitalInputHasActivated(board->cancelar))
         {
             DigitalOutputDeactivate(board->buzzer);
+            DisplayFlashDigits(board->display, 0, 0, 0);
         }
 
         if (DigitalInputHasActivated(board->ajustar_tiempo))

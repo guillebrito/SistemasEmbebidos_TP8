@@ -47,6 +47,10 @@ struct display_s
 {
     uint8_t digits;
     uint8_t active_digit;
+    uint8_t flashing_from;
+    uint8_t flashing_to;
+    uint16_t flashing_count;
+    uint16_t flashing_factor;
     uint8_t memory[DISPLAY_MAX_DIGITS];
     struct display_driver_s driver[1];
 };
@@ -91,6 +95,10 @@ display_t DisplayCreate(uint8_t digits, display_driver_t driver)
     {
         display->digits = digits;
         display->active_digit = digits - 1;
+        display->flashing_from = 0;
+        display->flashing_to = 0;
+        display->flashing_count = 0;
+        display->flashing_factor = 0;
         CopiarDrivers();
         BorrarMemoria();
         display->driver->ScreenTurnOff();
@@ -114,12 +122,40 @@ void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size)
 
 void DisplayRefresh(display_t display)
 {
-    display->driver->ScreenTurnOff();                                        // Borra pantalla
-    display->active_digit = (display->active_digit + 1) % display->digits;   // Cambia el digito avtivo entre 0 y 4.
-    display->driver->SegmentsTurnOn(display->memory[display->active_digit]); // Enciende segmentos
-    display->driver->DigitTurnOn(display->active_digit);                     // Enciende dígito
+    uint8_t segments;
+
+    display->driver->ScreenTurnOff();                                      // Borra pantalla
+    display->active_digit = (display->active_digit + 1) % display->digits; // Cambia el digito avtivo entre 0 y 4.
+
+    segments = display->memory[display->active_digit];
+    if (display->flashing_factor)
+    {
+        if (display->active_digit == 0)
+        {
+            display->flashing_count = (display->flashing_count + 1) % display->flashing_factor;
+        }
+
+        if ((display->active_digit >= display->flashing_from) && (display->active_digit <= display->flashing_to))
+        {
+            if (display->flashing_count > (display->flashing_factor / 2))
+            {
+                segments = 0;
+            }
+        }
+    }
+
+    display->driver->SegmentsTurnOn(segments);           // Enciende segmentos
+    display->driver->DigitTurnOn(display->active_digit); // Enciende dígito
 
     return;
+}
+
+void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t frec)
+{
+    display->flashing_from = from;
+    display->flashing_to = to;
+    display->flashing_count = 0;
+    display->flashing_factor = frec;
 }
 
 /* === End of documentation ==================================================================== */

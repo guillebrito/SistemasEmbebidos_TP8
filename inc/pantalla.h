@@ -109,6 +109,16 @@ extern "C"
      */
     void DisplayRefresh(display_t display);
 
+    /**
+     * @brief Función para hacer parpadear los dígitos de la pantalla
+     *
+     * @param display   Puntero al descriptor de la pantalla a parpadear.
+     * @param from      El primer dígito que se quiere hacer parpadear.
+     * @param to        El último dígito que ser quiere hacer apagar.
+     * @param frec      Factor de división de ka frecuencía de parapadeo.
+     */
+    void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t frec);
+
     /* === End of documentation ==================================================================== */
 
 #ifdef __cplusplus
